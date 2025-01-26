@@ -1,0 +1,113 @@
+openapi: 3.1.0
+info:
+  title: REST API best practices
+  description: This API provides best practices for REST API design.
+  version: 1.0.0
+  contact:
+    name: Suresh Raju Pilli
+    url: https://www.pillisureshraju.in/
+    email: sureshraju.pilli@gmail.com
+servers:
+  - url: https://api.example.com/v1
+    description: Main (production) server
+
+tags:
+  - name: User
+    description: Operations related to user profiles
+  - name: Items
+    description: Paginated items
+
+paths:
+  /user:
+    post:
+      summary: Create a user profile
+      description: This endpoint creates a new user profile.
+      operationId: createUserProfile
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/IndividualUser'
+                - $ref: '#/components/schemas/CorporateUser'
+      responses:
+        '201':
+          description: User created successfully
+    get:
+      summary: Get a paginated list of items
+      description: Retrieve a paginated list of items from the server.
+      operationId: getPaginatedItems
+      tags:
+        - Items
+      parameters:
+        - name: page
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (starting from 1)
+        - name: size
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+          description: Number of items per page (max 50)
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
+components:
+  schemas:
+    IndividualUser:
+      type: object
+      required: [name, email, personalPhone]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        personalPhone:
+          type: string
+    CorporateUser:
+      type: object
+      required: [companyName, email, businessPhone]
+      properties:
+        companyName:
+          type: string
+        email:
+          type: string
+          format: email
+        businessPhone:
+          type: string
+    Item:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    PaginatedResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+        total:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        total_pages:
+          type: integer
