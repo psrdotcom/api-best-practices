@@ -1,9 +1,8 @@
 """API with pagination with page and size params."""
 
 from fastapi import FastAPI, Query, HTTPException
-from typing import List, Optional
+from typing import List
 from pydantic import BaseModel
-from fastapi.openapi.models import OpenAPI
 
 # Initialize the FastAPI app
 app = FastAPI(
@@ -16,10 +15,12 @@ app = FastAPI(
 # Sample data
 ITEMS = [{"id": i, "name": f"Item {i}"} for i in range(1, 101)]
 
+
 # Pydantic model for item
 class Item(BaseModel):
     id: int
     name: str
+
 
 # Pydantic model for paginated response
 class PaginatedResponse(BaseModel):
