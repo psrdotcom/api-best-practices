@@ -6,15 +6,12 @@ To explain the concepts of OpenAPI 3.1.x, created a few APIs
 1. Bruno App
 2. Install Pydantic, FastAPI, UniCorn
    1. ```sh
-      pip install pydantic
-   2. ```sh
-      pip install fastapi
-   3. ```sh
-      pip install unicorn
+      pip install -r requirements.txt
+
 
 ## Run the application on a local http server
 ```sh
-uvicorn app:app --reload
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 ## Usage
 ### /pets
