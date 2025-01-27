@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: REST API best practices
   description: This API provides best practices for REST API design.
-  version: 1.0.0
+  version: 1.0.0-oas3-oas3.1
   contact:
     name: Suresh Raju Pilli
     url: https://www.pillisureshraju.in/
@@ -10,7 +10,6 @@ info:
 servers:
   - url: http://localhost:8000
     description: Testing server
-
 tags:
   - name: User
     description: Operations related to user profiles
@@ -22,7 +21,8 @@ tags:
     description: Operations related to products
   - name: Shapes
     description: Operations related to shapes
-
+  - name: Laptops
+    description: Operations related to Laptops
 paths:
   /items:
     get:
@@ -85,7 +85,7 @@ paths:
     post:
       summary: Create a product (allOf example)
       description: Creates a product that must satisfy all schema requirements
-      operationId: createShape
+      operationId: createProduct
       tags:
         - Products
       requestBody:
@@ -154,6 +154,134 @@ paths:
           description: Unprocessable Entity - Validation error.
         '500':
           description: Internal Server Error - Something went wrong on the server.
+
+  /laptops/{laptop_id}:
+    get:
+      summary: Get laptop details
+      description: |
+        Retrieve laptop information with configurable verbosity level:
+        - minimum: Basic info only
+        - regular: Common specifications
+        - extended: Complete details
+      operationId: listLaptops
+      tags:
+        - Laptops
+      parameters:
+        - name: laptop_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the laptop
+        - name: verbosity
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ResponseVerbosity'
+          description: Control the detail level of the response
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/LaptopBase'
+                  - $ref: '#/components/schemas/LaptopRegular'
+                  - $ref: '#/components/schemas/LaptopExtended'
+              examples:
+                minimum:
+                  value:
+                    id: LP123456
+                    brand: TechBook
+                    model: Pro X15
+                    price: 1299.99
+                regular:
+                  value:
+                    id: LP123456
+                    brand: TechBook
+                    model: Pro X15
+                    price: 1299.99
+                    processor: Intel Core i7-12700H
+                    ram_gb: 16
+                    storage_gb: 512
+                    screen_size: 15.6
+                    operating_system: Windows 11 Pro
+                    in_stock: true
+                extended:
+                  value:
+                    id: LP123456
+                    brand: TechBook
+                    model: Pro X15
+                    price: 1299.99
+                    processor: Intel Core i7-12700H
+                    ram_gb: 16
+                    storage_gb: 512
+                    screen_size: 15.6
+                    operating_system: Windows 11 Pro
+                    in_stock: true
+                    graphics_card: NVIDIA RTX 3060 6GB
+                    battery_whr: 80
+                    weight_kg: 2.1
+                    dimensions_cm:
+                      - 35.8
+                      - 24.2
+                      - 1.9
+                    ports:
+                      - USB-C
+                      - USB-A
+                      - HDMI
+                      - Audio Jack
+                    warranty_months: 24
+                    release_date: '2023-06-15T00:00:00Z'
+                    last_updated: '2024-01-15T00:00:00Z'
+                    description: Professional grade laptop for demanding users
+                    features:
+                      - Backlit Keyboard
+                      - Fingerprint Reader
+                      - Thunderbolt 4
+                    reviews_count: 128
+                    average_rating: 4.5
+  /laptops:
+    get:
+      summary: List laptops
+      description: Retrieve a list of laptops with pagination and verbosity control
+      operationId: listAllLaptops
+      tags:
+        - Laptops
+      parameters:
+        - name: verbosity
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ResponseVerbosity'
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of laptops
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/LaptopBase'
+                    - $ref: '#/components/schemas/LaptopRegular'
+                    - $ref: '#/components/schemas/LaptopExtended'
 components:
   schemas:
     Item:
@@ -218,7 +346,7 @@ components:
           $ref: '#/components/schemas/ShapeType'
         color:
           type: string
-          pattern: '^#[0-9a-fA-F]{6}$'
+          pattern: ^#[0-9a-fA-F]{6}$
         name:
           type: string
           minLength: 1
@@ -232,10 +360,12 @@ components:
           properties:
             width:
               type: number
+              minimum: 0
               exclusiveMinimum: 0
               maximum: 1000
             height:
               type: number
+              minimum: 0
               exclusiveMinimum: 0
               maximum: 1000
             aspect_ratio:
@@ -250,6 +380,7 @@ components:
           properties:
             radius:
               type: number
+              minimum: 0
               exclusiveMinimum: 0
               maximum: 500
             circumference:
@@ -267,26 +398,24 @@ components:
             - $ref: '#/components/schemas/Circle'
       required:
         - shape
-
-    # allOf Example Schemas
     BaseProduct:
       type: object
       properties:
         id:
           type: string
-          pattern: '^[A-Z]{2}[0-9]{6}$'
+          pattern: ^[A-Z]{2}[0-9]{6}$
         name:
           type: string
           minLength: 1
           maxLength: 100
         price:
           type: number
+          minimum: 0
           exclusiveMinimum: 0
       required:
         - id
         - name
         - price
-
     InventoryItem:
       type: object
       properties:
@@ -295,7 +424,7 @@ components:
           minimum: 0
         warehouse_location:
           type: string
-          pattern: '^[A-Z]-[0-9]{2}-[0-9]{2}$'
+          pattern: ^[A-Z]-[0-9]{2}-[0-9]{2}$
         reorder_point:
           type: integer
           minimum: 0
@@ -303,18 +432,19 @@ components:
         - stock_count
         - warehouse_location
         - reorder_point
-
     ShippingDetails:
       type: object
       properties:
         weight_kg:
           type: number
+          minimum: 0
           exclusiveMinimum: 0
           maximum: 1000
         dimensions_cm:
           type: array
           items:
             type: number
+            minimum: 0
             exclusiveMinimum: 0
             maximum: 300
           minItems: 3
@@ -325,9 +455,112 @@ components:
       required:
         - weight_kg
         - dimensions_cm
-
     CompleteProduct:
       allOf:
         - $ref: '#/components/schemas/BaseProduct'
         - $ref: '#/components/schemas/InventoryItem'
         - $ref: '#/components/schemas/ShippingDetails'
+    ResponseVerbosity:
+      type: string
+      enum:
+        - minimum
+        - regular
+        - extended
+      default: regular
+    LaptopBase:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the laptop
+        brand:
+          type: string
+        model:
+          type: string
+        price:
+          type: number
+          format: float
+      required:
+        - id
+        - brand
+        - model
+        - price
+    LaptopRegular:
+      allOf:
+        - $ref: '#/components/schemas/LaptopBase'
+        - type: object
+          properties:
+            processor:
+              type: string
+            ram_gb:
+              type: integer
+            storage_gb:
+              type: integer
+            screen_size:
+              type: number
+              format: float
+            operating_system:
+              type: string
+            in_stock:
+              type: boolean
+          required:
+            - processor
+            - ram_gb
+            - storage_gb
+            - screen_size
+            - operating_system
+            - in_stock
+    LaptopExtended:
+      allOf:
+        - $ref: '#/components/schemas/LaptopRegular'
+        - type: object
+          properties:
+            graphics_card:
+              type: string
+            battery_whr:
+              type: integer
+            weight_kg:
+              type: number
+              format: float
+            dimensions_cm:
+              type: array
+              items:
+                type: number
+              minItems: 3
+              maxItems: 3
+            ports:
+              type: array
+              items:
+                type: string
+            warranty_months:
+              type: integer
+            release_date:
+              type: string
+              format: date-time
+            last_updated:
+              type: string
+              format: date-time
+            description:
+              type: string
+            features:
+              type: array
+              items:
+                type: string
+            reviews_count:
+              type: integer
+            average_rating:
+              type: number
+              format: float
+          required:
+            - graphics_card
+            - battery_whr
+            - weight_kg
+            - dimensions_cm
+            - ports
+            - warranty_months
+            - release_date
+            - last_updated
+            - description
+            - features
+            - reviews_count
+            - average_rating
