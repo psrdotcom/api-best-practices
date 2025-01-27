@@ -532,13 +532,3 @@ async def list_laptops(
 
     else:  # EXTENDED
         return [LaptopExtended(**l) for l in laptops]
-
-# Example metadata for OpenAPI customization
-app.openapi = lambda: {
-    **app.openapi(),
-    "info": {
-        **app.openapi().get("info", {}),
-        "description":
-        "A simple API demonstrating pagination and OpenAPI 3.1",
-    },
-}

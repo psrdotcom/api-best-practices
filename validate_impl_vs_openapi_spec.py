@@ -15,6 +15,6 @@ openapi_yaml_json = json.loads(json.dumps(openapi_yaml))
 
 # Compare the two schemas
 if openapi_json == openapi_yaml_json:
-    print("The OpenAPI specification matches the implementation in app.py")
+    print("The OpenAPI specification matches the implementation")
 else:
-    print("The OpenAPI specification does not match the implementation in app.py")
+    print("The OpenAPI specification does not match the implementation")
