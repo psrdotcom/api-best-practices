@@ -1,0 +1,17 @@
+meta {
+  name: List Laptops - Extended Details
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{base_url}}/laptops?verbosity=extended&limit=10&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  verbosity: extended
+  limit: 10
+  offset: 0
+}

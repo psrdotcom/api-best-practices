@@ -1,16 +1,16 @@
 meta {
   name: GetItems
   type: http
-  seq: 2
+  seq: 1
 }
 
 get {
-  url: http://127.0.0.1:8000/items
+  url: http://127.0.0.1:8000/items?page=2
   body: none
   auth: none
 }
 
 params:query {
-  ~page: 2
+  page: 2
   ~size: 20
 }

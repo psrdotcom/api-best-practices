@@ -1,0 +1,27 @@
+meta {
+  name: ValidRectangle
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://127.0.0.1:8000/shapes/oneof
+  body: json
+  auth: none
+}
+
+headers {
+  ~Content-Type: application/json
+}
+
+body:json {
+  {
+    "shape": {
+      "shape_type": "rectangle",
+      "width": 10.5,
+      "height": 5.25,
+      "color": "#FF5733",
+      "name": "My Rectangle"
+    }
+  }
+}

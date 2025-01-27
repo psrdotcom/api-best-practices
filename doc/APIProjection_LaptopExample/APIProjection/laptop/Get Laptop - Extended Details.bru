@@ -1,0 +1,17 @@
+meta {
+  name: Get Laptop - Extended Details
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/laptops/LP123456?verbosity=extended
+  body: none
+  auth: none
+}
+
+params:query {
+  verbosity: extended
+  ~limit: 3
+  ~offset: 0
+}

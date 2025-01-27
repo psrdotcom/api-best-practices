@@ -1,0 +1,25 @@
+meta {
+  name: InvalidRectangle1
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://127.0.0.1:8000/shapes/oneof
+  body: json
+  auth: none
+}
+
+headers {
+  ~Content-Type: application/json
+}
+
+body:json {
+  {
+    "shape": {
+      "shape_type": "rectangle",
+      "width": 1000.5,
+      "height": 5.0
+    }
+  }
+}

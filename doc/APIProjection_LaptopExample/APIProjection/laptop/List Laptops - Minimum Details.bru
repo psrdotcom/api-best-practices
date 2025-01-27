@@ -1,0 +1,17 @@
+meta {
+  name: List Laptops - Minimum Details
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{base_url}}/laptops?verbosity=minimum&limit=2&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  verbosity: minimum
+  limit: 2
+  offset: 0
+}
