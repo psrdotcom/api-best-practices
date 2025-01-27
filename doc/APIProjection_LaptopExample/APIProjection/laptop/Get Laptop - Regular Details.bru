@@ -1,0 +1,15 @@
+meta {
+  name: Get Laptop - Regular Details
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{base_url}}/laptops/LP123456?verbosity=regular
+  body: none
+  auth: none
+}
+
+params:query {
+  verbosity: regular
+}

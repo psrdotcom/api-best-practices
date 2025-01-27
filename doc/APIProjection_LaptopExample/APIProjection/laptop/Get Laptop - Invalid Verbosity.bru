@@ -1,0 +1,15 @@
+meta {
+  name: Get Laptop - Invalid Verbosity
+  type: http
+  seq: 8
+}
+
+get {
+  url: http://localhost:8000/laptops/LP123456?verbosity=abc
+  body: none
+  auth: none
+}
+
+params:query {
+  verbosity: abc
+}

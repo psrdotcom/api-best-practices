@@ -1,0 +1,17 @@
+meta {
+  name: List Laptops - Invalid Pagination
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{base_url}}/laptops?limit=101&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 101
+  offset: 0
+  ~verbosity: regular
+}

@@ -1,0 +1,17 @@
+meta {
+  name: List Laptops - Regular Details
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{base_url}}/laptops?verbosity=regular&limit=5&offset=0
+  body: none
+  auth: none
+}
+
+params:query {
+  verbosity: regular
+  limit: 5
+  offset: 0
+}

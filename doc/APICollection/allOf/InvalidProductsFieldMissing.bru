@@ -1,0 +1,28 @@
+meta {
+  name: InvalidProductsFieldMissing
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://127.0.0.1:8000/products/allof
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "id": "AB123456",
+    "name": "Premium Widget",
+    "price": 29.99,
+    "stock_count": 100,
+    "reorder_point": 25,
+    "weight_kg": 1.5,
+    "dimensions_cm": [
+      30.0,
+      20.0,
+      15.0
+    ],
+    "fragile": true
+  }
+}
