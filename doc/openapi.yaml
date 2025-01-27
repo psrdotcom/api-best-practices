@@ -136,15 +136,17 @@ paths:
               catExample:
                 summary: A cat example
                 value:
-                  petType: cat
-                  name: Whiskers
-                  favoriteToy: Ball
+                  pet:
+                    petType: cat
+                    name: Whiskers
+                    favoriteToy: Ball
               dogExample:
                 summary: A dog example
                 value:
-                  petType: dog
-                  name: Buddy
-                  breed: Golden Retriever
+                  pet:
+                    petType: dog
+                    name: Buddy
+                    breed: Golden Retriever
       responses:
         '200':
           description: Pet added successfully.
