@@ -194,7 +194,7 @@ class CompleteProduct(BaseProduct, InventoryItem, ShippingDetails):
         return self
 
 
-@app.post("/pets", response_description="Add a new pet", response_model=Pet)
+@app.post("/pets/anyof", response_description="Add a new pet", response_model=Pet)
 async def add_pet(pet: Pet):
     """
     Add a new pet to the system.
