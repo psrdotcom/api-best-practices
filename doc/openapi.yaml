@@ -10,112 +10,21 @@ info:
 servers:
   - url: http://localhost:8000
     description: Testing server
+  - url: https://military-kesley-psrandapps-d7f588a1.koyeb.app
+    description: Main (Production) Server
 tags:
-  - name: User
-    description: Operations related to user profiles
+  - name: Pets
+    description: Examples of anyOf OpenAPI 3.1.x
+  - name: Shapes
+    description: Examples of oneOf OpenAPI 3.1.x
+  - name: Products
+    description: Examples of allOf OpenAPI 3.1.x
   - name: Items
     description: Paginated items
-  - name: Pets
-    description: Operations related to pets
-  - name: Products
-    description: Operations related to products
-  - name: Shapes
-    description: Operations related to shapes
   - name: Laptops
-    description: Operations related to Laptops
+    description: Entity Object Verbosity - Projection
 paths:
-  /items:
-    get:
-      summary: Get a paginated list of items
-      description: Paginated response of the items
-      operationId: createItems
-      tags:
-        - Items
-      parameters:
-        - name: page
-          in: query
-          required: true
-          schema:
-            type: integer
-            minimum: 1
-          description: Page number (starting from 1)
-        - name: size
-          in: query
-          required: true
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 50
-          description: Number of items per page (max 50)
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedResponse'
-  /shapes/oneof:
-    post:
-      summary: Create a shape (oneOf example)
-      description: Accepts either a rectangle or circle with strict validation
-      operationId: createShape
-      tags:
-        - Shapes
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/OneOfShape'
-      responses:
-        '200':
-          description: Shape created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  shape:
-                    $ref: '#/components/schemas/OneOfShape'
-                  validation_details:
-                    type: object
-  /products/allof:
-    post:
-      summary: Create a product (allOf example)
-      description: Creates a product that must satisfy all schema requirements
-      operationId: createProduct
-      tags:
-        - Products
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompleteProduct'
-      responses:
-        '200':
-          description: Product created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  product:
-                    $ref: '#/components/schemas/CompleteProduct'
-                  calculated_metrics:
-                    type: object
-                    properties:
-                      volume_m3:
-                        type: number
-                      density_kg_m3:
-                        type: number
-                      reorder_value:
-                        type: number
-  /pets:
+  /pets/anyof:
     post:
       summary: Add a pet
       description: Add a pet which can be either a cat or a dog.
@@ -157,6 +66,196 @@ paths:
         '500':
           description: Internal Server Error - Something went wrong on the server.
 
+  /shapes/oneof:
+    post:
+      summary: Create a shape (oneOf example)
+      description: Accepts either a rectangle or circle with strict validation
+      operationId: createShape
+      tags:
+        - Shapes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OneOfShape'
+            examples:
+              validRectangle:
+                summary: Valid Rectangle
+                value:
+                  shape:
+                    shape_type: rectangle
+                    color: "#FF5733"
+                    name: "MyRectangle"
+                    width: 200
+                    height: 100
+                    aspect_ratio: 2.0
+              invalidRectangle:
+                summary: Invalid Rectangle
+                value:
+                  shape:
+                    shape_type: rectangle
+                    color: "invalid-color-code"
+                    name: ""
+                    width: -10
+                    height: 1001
+                    aspect_ratio: -1.0
+              validCircleMinFields:
+                summary: A valid circle with minimum fields
+                value:
+                  shape:
+                    shape_type: circle
+                    name: "MyCircle"
+                    radius: 50
+              invalidCircle:
+                summary: An invalid circle example
+                value:
+                  shape:
+                    shape_type: circle
+                    name: "NoCircle"
+                    radius: -10
+      responses:
+        '200':
+          description: Shape created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  shape:
+                    $ref: '#/components/schemas/OneOfShape'
+                  validation_details:
+                    type: object
+        '400':
+          description: Bad Request - Invalid input data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: string
+        '422':
+          description: Unprocessable Entity - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OneOfShapeErrorResponse'
+  /products/allof:
+    post:
+      summary: Create a product (allOf example)
+      description: Creates a product that must satisfy all schema requirements
+      operationId: createProduct
+      tags:
+        - Products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteProduct'
+            examples:
+              validProduct:
+                summary: A valid product example
+                value:
+                  id: AB123456
+                  name: Premium Widget
+                  price: 29.99
+                  stock_count: 100
+                  warehouse_location: A-12-34
+                  reorder_point: 25
+                  weight_kg: 1.5
+                  dimensions_cm:
+                    - 30
+                    - 20
+                    - 15
+                  fragile: true
+              invalidProduct:
+                summary: An invalid product example
+                value:
+                  id: "123456"
+                  name: Widget
+                  price: 29.99
+                  stock_count: 100
+                  warehouse_location: A-12-34
+                  reorder_point: 25
+                  weight_kg: 1.5
+                  dimensions_cm:
+                    - 30
+                    - 20
+                    - 15
+                  fragile: true
+              fieldMissing:
+                summary: Field missing in the request
+                value:
+                  id: AB123456
+                  name: Premium Widget
+                  price: 29.99
+                  stock_count: 100
+                  reorder_point: 25
+                  weight_kg: 1.5
+                  dimensions_cm:
+                    - 30
+                    - 20
+                    - 15
+                  fragile: true
+      responses:
+        '200':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  product:
+                    $ref: '#/components/schemas/CompleteProduct'
+                  calculated_metrics:
+                    type: object
+                    properties:
+                      volume_m3:
+                        type: number
+                      density_kg_m3:
+                        type: number
+                      reorder_value:
+                        type: number
+  /items:
+    get:
+      summary: Get a paginated list of items
+      description: Paginated response of the items
+      operationId: createItems
+      tags:
+        - Items
+      parameters:
+        - name: page
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number (starting from 1)
+        - name: size
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+          description: Number of items per page (max 50)
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedResponse'
   /laptops/{laptop_id}:
     get:
       summary: Get laptop details
@@ -286,28 +385,6 @@ paths:
                     - $ref: '#/components/schemas/LaptopExtended'
 components:
   schemas:
-    Item:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-    PaginatedResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Item'
-        total:
-          type: integer
-        page:
-          type: integer
-        size:
-          type: integer
-        total_pages:
-          type: integer
     Cat:
       type: object
       properties:
@@ -462,6 +539,29 @@ components:
         - $ref: '#/components/schemas/BaseProduct'
         - $ref: '#/components/schemas/InventoryItem'
         - $ref: '#/components/schemas/ShippingDetails'
+    Item:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    PaginatedResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+        total:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        total_pages:
+          type: integer
+
     ResponseVerbosity:
       type: string
       enum:
@@ -566,3 +666,47 @@ components:
             - features
             - reviews_count
             - average_rating
+    OneOfShapeErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              loc:
+                type: array
+                items:
+                  type: string
+              msg:
+                type: string
+              input:
+                type: object
+              ctx:
+                type: object
+                additionalProperties: true
+      example:
+        detail: 
+          - type: "missing"
+            loc: ["body", "shape", "Rectangle", "width"]
+            msg: "Field required"
+            input: 
+              shape_type: "circle"
+              name: "NoCircle"
+              radius: -10
+          - type: "missing"
+            loc: ["body", "shape", "Rectangle", "height"]
+            msg: "Field required"
+            input: 
+              shape_type: "circle"
+              name: "NoCircle"
+              radius: -10
+          - type: "greater_than"
+            loc: ["body", "shape", "function-after[calculate_circle_properties(), Circle]", "radius"]
+            msg: "Input should be greater than 0"
+            input: 
+              value: -10
+            ctx: 
+              gt: 0
