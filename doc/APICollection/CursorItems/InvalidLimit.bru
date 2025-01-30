@@ -1,0 +1,22 @@
+meta {
+  name: InvalidLimit
+  type: http
+  seq: 6
+}
+
+get {
+  url: http://127.0.0.1:8000/cursoritems?limit=1001
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 1001
+  ~cursor: fsjffdjflkads==
+  ~direction: previous
+}
+
+vars:post-response {
+  next_cursor: res.body.next_cursor
+  previous_cursor: res.body.previous_cursor
+}

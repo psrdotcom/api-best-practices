@@ -53,7 +53,8 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
    - /pets/anyof: Add a pet (either a cat or a dog)
    - /shapes/oneof: Create a shape (either a rectangle or circle with strict validation)
    - /products/allof: Create a product that must satisfy all schema requirements
-   - /items: Get a paginated list of items
+   - /offsetitems: Get a paginated list of items using offset pagination
+   - /cursoritems: Get a paginated list of items using cursor pagination
    - /laptops/{laptop_id}: Get laptop details with configurable verbosity level
    - /laptops: List laptops with pagination and verbosity control
  
@@ -70,7 +71,8 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
    - InventoryItem: Schema for inventory item
    - ShippingDetails: Schema for shipping details
    - CompleteProduct: Schema for a complete product (allOf BaseProduct, InventoryItem, ShippingDetails)
-   - Item: Schema for an item
+   - OffsetItem: Schema for an offset item
+   - CursorItem: Schema for a cursor item
    - PaginatedResponse: Schema for paginated response
    - ResponseVerbosity: Enum for response verbosity levels (minimum, regular, extended)
    - LaptopBase: Base schema for a laptop
