@@ -1,8 +1,10 @@
 """API with pagination with page and size params."""
+import base64
 from enum import Enum
 import math
 from typing import List, Optional, Union
 from datetime import datetime
+import json
 from fastapi import FastAPI, Query, HTTPException
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
@@ -16,18 +18,75 @@ app = FastAPI(
 )
 
 # Sample data
-ITEMS = [{"id": i, "name": f"Item {i}"} for i in range(1, 101)]
+OFFSET_ITEMS = [{"id": i, "name": f"Item {i}"} for i in range(1, 101)]
 
 
 # Pydantic model for item
-class Item(BaseModel):
+class OffsetItem(BaseModel):
     id: int
     name: str
 
+# Sample data model
+class CursorItem(BaseModel):
+    id: int
+    name: str
+    created_at: datetime   
+    class Config:
+        from_attributes = True
+
+# In-memory database (for demonstration)
+items_db = [
+    CursorItem(
+        id=i,
+        name=f"Item {i}",
+        created_at=datetime.fromisoformat(f"2025-{(i%12)+1:02d}-{(i % 28) + 1:02d}T10:00:00")
+    )
+    for i in range(1, 101)
+]
+
+class CursorPaginatedResponse(BaseModel):
+    items: List[CursorItem]
+    next_cursor: Optional[str]
+    previous_cursor: Optional[str]
+    total_count: int
+
+def encode_cursor(item: CursorItem) -> str:
+    """Encode the cursor using base64.
+
+    Args:
+        item (CursorItem): The item to encode.
+
+    Returns:
+        str: The encoded cursor.
+    """
+    cursor_data = {
+        "id": item.id,
+        "created_at": item.created_at.isoformat()
+    }
+    json_str = json.dumps(cursor_data)
+    return base64.b64encode(json_str.encode()).decode()
+
+def decode_cursor(cursor: str) -> dict:
+    """Decode the cursor from base64.
+
+    Args:
+        cursor (str): The cursor to decode.
+
+    Returns:
+        dict: The decoded cursor data.
+
+    Raises:
+        HTTPException: If the cursor is invalid.
+    """
+    try:
+        json_str = base64.b64decode(cursor.encode()).decode()
+        return json.loads(json_str)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid cursor") from exc
 
 # Pydantic model for paginated response
-class PaginatedResponse(BaseModel):
-    items: List[Item]
+class OffsetPaginatedResponse(BaseModel):
+    items: List[OffsetItem]
     total: int
     page: int
     size: int
@@ -86,6 +145,15 @@ class Rectangle(ShapeBase):
     @field_validator('aspect_ratio', mode='before')
     @classmethod
     def calculate_aspect_ratio(cls, v, info):
+        """Calculate the aspect ratio of the rectangle.
+
+        Args:
+            v (float): The aspect ratio value.
+            info (ValidatorInfo): The validator info.
+
+        Returns:
+            float: The calculated aspect ratio.
+        """
         values = info.data
         if 'width' in values and 'height' in values:
             return round(values['width'] / values['height'], 2)
@@ -94,6 +162,17 @@ class Rectangle(ShapeBase):
     @field_validator('width', 'height')
     @classmethod
     def validate_dimensions(cls, v):
+        """Validate the dimensions of the rectangle.
+
+        Args:
+            v (float): The dimension value.
+
+        Returns:
+            float: The validated dimension value.
+
+        Raises:
+            ValueError: If the dimension value has more than 2 decimal places.
+        """
         if not float(v).is_integer() and len(str(float(v)).split('.')[-1]) > 2:
             raise ValueError('Maximum 2 decimal places allowed')
         return v
@@ -109,6 +188,17 @@ class Circle(ShapeBase):
     @field_validator('radius')
     @classmethod
     def validate_radius(cls, v):
+        """Validate the radius of the circle.
+
+        Args:
+            v (float): The radius value.
+
+        Returns:
+            float: The validated radius value.
+
+        Raises:
+            ValueError: If the radius value has more than 2 decimal places.
+        """
         if not float(v).is_integer() and len(str(float(v)).split('.')[-1]) > 2:
             raise ValueError('Maximum 2 decimal places allowed')
         return v
@@ -127,6 +217,17 @@ class OneOfShape(BaseModel):
     @field_validator('shape')
     @classmethod
     def validate_shape_properties(cls, v):
+        """Validate the properties of the shape.
+
+        Args:
+            v (Union[Rectangle, Circle]): The shape value.
+
+        Returns:
+            Union[Rectangle, Circle]: The validated shape value.
+
+        Raises:
+            ValueError: If the shape properties are invalid.
+        """
         # Additional custom validation rules
         if isinstance(v, Rectangle):
             # Validate rectangle is not too narrow
@@ -166,6 +267,17 @@ class ShippingDetails(BaseModel):
     @field_validator('dimensions_cm')
     @classmethod
     def validate_dimensions(cls, v):
+        """Validate the dimensions of the product.
+
+        Args:
+            v (tuple[float, float, float]): The dimensions value.
+
+        Returns:
+            tuple[float, float, float]: The validated dimensions value.
+
+        Raises:
+            ValueError: If the dimensions are invalid.
+        """
         if len(v) != 3 or not all(0 < x <= 300 for x in v):
             raise ValueError(
                 "Dimensions must be 3 positive values, each ≤ 300cm")
@@ -200,6 +312,14 @@ async def add_pet(pet: Pet):
     Add a new pet to the system.
 
     - **pet**: The pet to add (either a cat or a dog).
+    Args:
+        pet (Pet): The pet to add (either a cat or a dog).
+
+    Returns:
+        dict: A message indicating the pet was added successfully and the pet data.
+
+    Raises:
+        HTTPException: If the pet data is invalid.
     """
     try:
         # Validate the pet input based on its type (Cat or Dog)
@@ -349,6 +469,12 @@ SAMPLE_LAPTOP = [{
 async def create_shape(shape_data: OneOfShape):
     """
     oneOf example with strict validation:
+    Args:
+        shape_data (OneOfShape): The shape data.
+
+    Returns:
+        dict: A message indicating the shape was created successfully and the shape data.
+    
     - Validates shape type using enum
     - Enforces dimension limits
     - Validates decimal precision
@@ -384,7 +510,7 @@ async def create_shape(shape_data: OneOfShape):
     return response
 
 
-@app.get("/items", response_model=PaginatedResponse, tags=["Items"])
+@app.get("/offsetitems", response_model=OffsetPaginatedResponse, tags=["Items"])
 async def get_items(
     page: int = Query(1, ge=1, description="Page number (starting from 1)"),
     size: int = Query(10,
@@ -392,20 +518,26 @@ async def get_items(
                       le=50,
                       description="Number of items per page (max 50)"),
 ):
+    """Get a paginated list of items.
+
+    Args:
+        page (int): The page number (starting from 1).
+        size (int): The number of items per page (max 50).
+
+    Returns:
+        OffsetPaginatedResponse: The paginated response containing items.
     """
-    Get a paginated list of items.
-    """
-    total_items = len(ITEMS)
+    total_items = len(OFFSET_ITEMS)
     start = (page - 1) * size
     end = start + size
 
     if start >= total_items:
         raise HTTPException(status_code=404, detail="Page not found")
 
-    paginated_items = ITEMS[start:end]
+    paginated_items = OFFSET_ITEMS[start:end]
     total_pages = (total_items + size - 1) // size
 
-    return PaginatedResponse(
+    return OffsetPaginatedResponse(
         items=paginated_items,
         total=total_items,
         page=page,
@@ -532,3 +664,69 @@ async def list_laptops(
 
     else:  # EXTENDED
         return [LaptopExtended(**l) for l in laptops]
+
+@app.get(
+    "/cursoritems",
+    response_model=CursorPaginatedResponse,
+    summary="Get paginated items",
+    description="Retrieve a list of items using cursor-based pagination"
+)
+async def get_items(
+    limit: int = Query(default=10, ge=1, le=100, description="Number of items to return"),
+    cursor: Optional[str] = Query(
+        None,
+        description="Cursor for pagination. Leave empty for first page"
+    ),
+    direction: str = Query(
+        "next",
+        enum=["next", "previous"],
+        description="Direction of pagination"
+    )
+) -> CursorPaginatedResponse:
+    # If no cursor is provided, start from the beginning
+    if not cursor:
+        items = items_db[:limit]
+        next_cursor = encode_cursor(items[-1]) if len(items) == limit else None
+        return CursorPaginatedResponse(
+            items=items,
+            next_cursor=next_cursor,
+            previous_cursor=None,
+            total_count=len(items_db)
+        )
+    
+    # Decode the cursor
+    cursor_data = decode_cursor(cursor)
+    current_id = cursor_data["id"]
+    current_datetime = datetime.fromisoformat(cursor_data["created_at"])
+    
+    # Find the current position
+    current_index = next(
+        (i for i, item in enumerate(items_db) if item.id == current_id),
+        None
+    )
+    
+    if current_index is None:
+        raise HTTPException(status_code=404, detail="Cursor position not found")
+    
+    # Get items based on direction
+    if direction == "next":
+        start_idx = current_index + 1
+        end_idx = start_idx + limit
+        items = items_db[start_idx:end_idx]
+        
+        next_cursor = encode_cursor(items[-1]) if len(items) == limit else None
+        previous_cursor = encode_cursor(items_db[start_idx - 1]) if start_idx > 0 else None
+    else:  # previous
+        end_idx = current_index
+        start_idx = max(0, end_idx - limit)
+        items = items_db[start_idx:end_idx]
+        
+        next_cursor = encode_cursor(items_db[end_idx]) if end_idx < len(items_db) else None
+        previous_cursor = encode_cursor(items_db[start_idx - 1]) if start_idx > 0 else None
+    
+    return CursorPaginatedResponse(
+        items=items,
+        next_cursor=next_cursor,
+        previous_cursor=previous_cursor,
+        total_count=len(items_db)
+    )

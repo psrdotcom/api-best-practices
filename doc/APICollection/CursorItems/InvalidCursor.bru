@@ -1,0 +1,22 @@
+meta {
+  name: InvalidCursor
+  type: http
+  seq: 5
+}
+
+get {
+  url: http://127.0.0.1:8000/cursoritems?cursor=fsjffdjflkads==
+  body: none
+  auth: none
+}
+
+params:query {
+  cursor: fsjffdjflkads==
+  ~limit: 5
+  ~direction: previous
+}
+
+vars:post-response {
+  next_cursor: res.body.next_cursor
+  previous_cursor: res.body.previous_cursor
+}

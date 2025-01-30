@@ -1,0 +1,22 @@
+meta {
+  name: GetCustomPageSize
+  type: http
+  seq: 4
+}
+
+get {
+  url: http://127.0.0.1:8000/cursoritems?limit=5
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 5
+  ~cursor: {{previous_cursor}}
+  ~direction: previous
+}
+
+vars:post-response {
+  next_cursor: res.body.next_cursor
+  previous_cursor: res.body.previous_cursor
+}

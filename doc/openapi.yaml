@@ -40,8 +40,8 @@
 #   - InventoryItem: Schema for inventory item
 #   - ShippingDetails: Schema for shipping details
 #   - CompleteProduct: Schema for a complete product (allOf BaseProduct, InventoryItem, ShippingDetails)
-#   - Item: Schema for an item
-#   - PaginatedResponse: Schema for paginated response
+#   - OffsetItem: Schema for an offset item
+#   - CursorItem: Schema for a cursor item
 #   - ResponseVerbosity: Enum for response verbosity levels (minimum, regular, extended)
 #   - LaptopBase: Base schema for a laptop
 #   - LaptopRegular: Schema for a regular laptop (allOf LaptopBase)
@@ -275,7 +275,7 @@ paths:
                         type: number
                       reorder_value:
                         type: number
-  /items:
+  /offsetitems:
     get:
       summary: Get a paginated list of items
       description: Paginated response of the items
@@ -304,7 +304,57 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedResponse'
+                $ref: '#/components/schemas/OffsetPaginatedResponse'
+  /cursoritems:
+      get:
+        summary: Get paginated items
+        description: Retrieve a list of items using cursor-based pagination
+        operationId: getItems
+        tags:
+          - Items
+        parameters:
+          - name: limit
+            in: query
+            description: Number of items to return per page
+            required: false
+            schema:
+              type: integer
+              minimum: 1
+              maximum: 100
+              default: 10
+          - name: cursor
+            in: query
+            description: Cursor for pagination. Leave empty for first page
+            required: false
+            schema:
+              type: string
+          - name: direction
+            in: query
+            description: Direction of pagination
+            required: false
+            schema:
+              type: string
+              enum: [next, previous]
+              default: next
+        responses:
+          '200':
+            description: Successful retrieval of items
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/CursorPaginatedResponse'
+          '400':
+            description: Invalid cursor provided
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '404':
+            description: Cursor position not found
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
   /laptops/{laptop_id}:
     get:
       summary: Get laptop details
@@ -588,20 +638,20 @@ components:
         - $ref: '#/components/schemas/BaseProduct'
         - $ref: '#/components/schemas/InventoryItem'
         - $ref: '#/components/schemas/ShippingDetails'
-    Item:
+    OffsetItem:
       type: object
       properties:
         id:
           type: integer
         name:
           type: string
-    PaginatedResponse:
+    OffsetPaginatedResponse:
       type: object
       properties:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/Item'
+            $ref: '#/components/schemas/OffsetItem'
         total:
           type: integer
         page:
@@ -610,7 +660,62 @@ components:
           type: integer
         total_pages:
           type: integer
+    CursorItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the item
+          example: 1
+        name:
+          type: string
+          description: Name of the item
+          example: Item 1
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp of the item
+          example: "2024-01-01T10:00:00"
+      required:
+        - id
+        - name
+        - created_at
 
+    CursorPaginatedResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CursorItem'
+          description: List of items for the current page
+        next_cursor:
+          type: string
+          nullable: true
+          description: Cursor for the next page of results
+          example: "eyJpZCI6MTAsImNyZWF0ZWRfYXQiOiIyMDI0LTAxLTEwVDEwOjAwOjAwIn0="
+        previous_cursor:
+          type: string
+          nullable: true
+          description: Cursor for the previous page of results
+          example: "eyJpZCI6MSwiY3JlYXRlZF9hdCI6IjIwMjQtMDEtMDFUMTA6MDA6MDAifQ=="
+        total_count:
+          type: integer
+          description: Total number of items in the collection
+          example: 100
+      required:
+        - items
+        - total_count
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: Invalid cursor
+      required:
+        - detail
     ResponseVerbosity:
       type: string
       enum:

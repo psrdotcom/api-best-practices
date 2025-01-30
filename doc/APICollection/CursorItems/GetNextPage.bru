@@ -1,0 +1,22 @@
+meta {
+  name: GetNextPage
+  type: http
+  seq: 2
+}
+
+get {
+  url: http://127.0.0.1:8000/cursoritems?cursor={{next_cursor}}&direction=next&limit=10
+  body: none
+  auth: none
+}
+
+params:query {
+  cursor: {{next_cursor}}
+  direction: next
+  limit: 10
+}
+
+vars:post-response {
+  next_cursor: res.body.next_cursor
+  previous_cursor: res.body.previous_cursor
+}
